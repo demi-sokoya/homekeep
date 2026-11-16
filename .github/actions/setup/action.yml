@@ -1,0 +1,25 @@
+name: Setup
+description: Node from .nvmrc, npm cache, and a clean install from package-lock.json.
+
+inputs:
+  install-scripts:
+    description: Run package install scripts. 'false' for jobs that only inspect dependencies.
+    default: 'true'
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version-file: .nvmrc
+        cache: npm
+    - name: Install dependencies (exactly as locked)
+      shell: bash
+      env:
+        INSTALL_SCRIPTS: ${{ inputs.install-scripts }}
+      run: |
+        if [ "$INSTALL_SCRIPTS" = 'false' ]; then
+          npm ci --ignore-scripts
+        else
+          npm ci
+        fi
