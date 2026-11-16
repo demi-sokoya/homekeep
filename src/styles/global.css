@@ -1,0 +1,25 @@
+/*
+ * Global base styles. Colours, type, spacing and motion tokens arrive with ST-002 in
+ * src/styles/colors_and_type.css; until then this file holds layout-only resets (no colour values).
+ */
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+}
+
+#root {
+  min-height: 100dvh;
+}
