@@ -1,0 +1,149 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Pull requests: a new push cancels the older run. main: one group per commit, so every merge is checked.
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Until ST-001 adds package.json, the app jobs only report that there is nothing to check yet, so docs-only
+# pull requests can merge. Remove every "scaffold" step and its `if:` lines in the ST-001 pull request.
+# Scripts ST-001 must add to package.json: format:check, lint, typecheck, test, build, test:e2e (ST-029).
+
+jobs:
+  lint-typecheck:
+    name: lint-typecheck
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: App scaffold present (until ST-001)
+        id: scaffold
+        run: |
+          if [ -f package.json ]; then echo "present=true" >> "$GITHUB_OUTPUT"
+          else echo "::notice::No package.json yet; app checks start with ST-001"; fi
+      - uses: ./.github/actions/setup
+        if: steps.scaffold.outputs.present == 'true'
+      - name: Dependency tree matches package-lock.json
+        if: steps.scaffold.outputs.present == 'true'
+        run: npm ls --all > /dev/null
+      - name: Formatting
+        if: steps.scaffold.outputs.present == 'true'
+        run: npm run format:check
+      - name: Lint
+        if: steps.scaffold.outputs.present == 'true'
+        run: npm run lint
+      # ST-002: every colour comes from the design tokens. Fails and names each file and line.
+      # --allow entries are reviewed: the tokens file is where the colours are defined.
+      # The checker's own tests run in the audit job (node --test 'tools/ci/*.test.mjs').
+      - name: No raw colours outside the tokens file
+        if: steps.scaffold.outputs.present == 'true'
+        run: node tools/ci/raw-colour-check.mjs src --allow src/styles/colors_and_type.css
+      - name: Typecheck
+        if: steps.scaffold.outputs.present == 'true'
+        run: npm run typecheck
+
+  test:
+    name: test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: App scaffold present (until ST-001)
+        id: scaffold
+        run: |
+          if [ -f package.json ]; then echo "present=true" >> "$GITHUB_OUTPUT"
+          else echo "::notice::No package.json yet; app checks start with ST-001"; fi
+      - uses: ./.github/actions/setup
+        if: steps.scaffold.outputs.present == 'true'
+      - name: Unit tests
+        if: steps.scaffold.outputs.present == 'true'
+        run: npm test
+      - name: Production build (what Vercel deploys)
+        if: steps.scaffold.outputs.present == 'true'
+        run: npm run build
+      # ST-029: Playwright at a 375px phone viewport against the production build. Chromium only;
+      # trace recording off unless a failure is being debugged.
+      - name: Playwright browser
+        if: steps.scaffold.outputs.present == 'true' && hashFiles('playwright.config.ts') != ''
+        run: npm exec --no -- playwright install --with-deps chromium
+      - name: End-to-end tests (core flows)
+        if: steps.scaffold.outputs.present == 'true' && hashFiles('playwright.config.ts') != ''
+        run: npm run test:e2e -- --trace off
+
+  audit:
+    name: audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Tests for the CI checks (raw colours)
+        run: node --test 'tools/ci/*.test.mjs'
+      - name: App scaffold present (until ST-001)
+        id: scaffold
+        run: |
+          if [ -f package.json ]; then echo "present=true" >> "$GITHUB_OUTPUT"
+          else echo "::notice::No package.json yet; dependency checks start with ST-001"; fi
+      - uses: ./.github/actions/setup
+        if: steps.scaffold.outputs.present == 'true'
+        with:
+          install-scripts: 'false'
+      - name: Known vulnerabilities (fails on high or critical)
+        if: steps.scaffold.outputs.present == 'true'
+        run: npm audit --audit-level=high
+      - name: Registry signatures and provenance of installed packages
+        if: steps.scaffold.outputs.present == 'true'
+        run: npm audit signatures
+
+  secret-scan:
+    name: secret-scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      # Gitleaks CLI (MIT). The gitleaks-action is under its own licence and needs a licence key for organisations.
+      # Not updated by Dependabot: change the version and checksum together (official checksums file).
+      GITLEAKS_VERSION: 8.30.1
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Install Gitleaks (checksum verified)
+        env:
+          # Read-only job token: signed-in release downloads keep working when anonymous ones time out.
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          name="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          for attempt in 1 2 3 4 5; do
+            if gh release download "v${GITLEAKS_VERSION}" --repo gitleaks/gitleaks --pattern "$name" \
+              --dir "$RUNNER_TEMP" --clobber; then
+              break
+            fi
+            if [ "$attempt" = 5 ]; then
+              echo "Could not download Gitleaks after 5 attempts" >&2
+              exit 1
+            fi
+            sleep 15
+          done
+          # The checksum decides whether the file is used, however it was downloaded.
+          echo "${GITLEAKS_SHA256}  $RUNNER_TEMP/$name" | sha256sum --check --strict
+          tar -xzf "$RUNNER_TEMP/$name" -C "$RUNNER_TEMP" gitleaks
+          "$RUNNER_TEMP/gitleaks" version
+      # All branches and the full history. Inline "gitleaks:allow" comments are ignored, so an exception can
+      # only be made in .gitleaksignore or .gitleaks.toml, in a reviewed pull request.
+      - name: Scan the full git history for secrets
+        run: '"$RUNNER_TEMP/gitleaks" git --redact --no-banner --verbose --ignore-gitleaks-allow .'

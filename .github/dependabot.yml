@@ -1,0 +1,9 @@
+# Keeps the pinned action SHAs and npm packages current. Gitleaks is pinned by version + checksum in ci.yml
+# and is updated by hand.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directories: ['/', '/.github/actions/setup']
+    schedule:
+      interval: weekly
+  # ST-001: add an npm entry (directory '/', weekly) once package.json exists.
