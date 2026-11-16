@@ -17,6 +17,7 @@ A Vite + React + TypeScript project on a `dev` branch, with the agreed folder st
 - `main` protected: no direct pushes, PR required, CI must pass
 - `package.json` scripts the CI workflow (`.github/workflows/ci.yml`) already calls: `format:check` (Prettier), `lint` (ESLint), `typecheck` (`tsc --noEmit`), `test` (`vitest run`), `build`; `test:e2e` arrives with ST-029
 - In the same pull request: remove the "App scaffold present (until ST-001)" steps and their `if:` lines from `ci.yml`, and add an npm entry to `.github/dependabot.yml`
+- `.github/pull_request_template.md` is used for every story PR (one story per PR, `Closes #n`)
 - Repo root has `README.md` (overview, stack, local setup), `CHANGELOG.md` (Keep a Changelog), `.env.example` (empty template is fine)
 
 ### Depends on
