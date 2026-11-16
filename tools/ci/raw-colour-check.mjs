@@ -13,7 +13,8 @@ import { pathToFileURL } from 'node:url';
 
 const EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.css']);
 const SKIP_DIRS = new Set(['node_modules', 'dist', 'coverage', '.git']);
-const COLOUR = /#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-zA-Z_-])|\b(?:rgba?|hsla?)\(\s*[\d.]/g;
+const COLOUR =
+  /#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-zA-Z_-])|\b(?:rgba?|hsla?)\(\s*[\d.]/g;
 
 /** @param {string} text @returns {{line:number,column:number,match:string}[]} */
 export function findColours(text) {
