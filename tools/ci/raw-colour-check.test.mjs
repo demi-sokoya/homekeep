@@ -7,7 +7,10 @@ import { findColours, run } from './raw-colour-check.mjs';
 
 test('finds hex colours of every length', () => {
   const hits = findColours('a { color: #fff; b: #F2F5EE; c: #4E7A25cc; d: #abcd; }');
-  assert.deepEqual(hits.map((h) => h.match), ['#fff', '#F2F5EE', '#4E7A25cc', '#abcd']);
+  assert.deepEqual(
+    hits.map((h) => h.match),
+    ['#fff', '#F2F5EE', '#4E7A25cc', '#abcd'],
+  );
 });
 
 test('finds rgb, rgba, hsl and hsla calls', () => {

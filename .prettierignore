@@ -1,0 +1,5 @@
+dist
+coverage
+package-lock.json
+# Authored docs and backlog: kept as written, not reflowed by Prettier.
+docs
