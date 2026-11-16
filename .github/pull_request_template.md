@@ -1,12 +1,12 @@
 <!--
 One story per pull request. Title: Conventional Commit + story, e.g. "feat: add a task (ST-009)".
-Feature branches merge into dev; only dev merges into main (SOP 1.3).
+Feature (feat/) and fix (fix/) branches merge into dev; only dev merges into main (SOP 1.3).
 Delete these comments before opening. Use made-up task names only.
 -->
 
 ## Story
 
-Closes #<!-- issue number -->  (ST-<!-- 000 -->)
+Closes #<!-- issue number --> (ST-<!-- 000 -->)
 
 ## What changed
 

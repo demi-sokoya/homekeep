@@ -9,7 +9,7 @@ Run the SOP pre-deployment checklist, merge `dev` to `main`, tag `v1.0.0` and up
 
 ### Business rules
 - PRD §8 success criteria all ticked, each linked to the story that proves it
-- Code: `npx tsc --noEmit` clean, no `console.log` in production code, every TODO resolved or turned into an issue
+- Code: `npm run typecheck` clean, no `console.log` in production code, every TODO resolved or turned into an issue
 - Responsive: checked on a real phone and at 375, 768 and 1280px; no horizontal scroll; 44px targets
 - Lighthouse mobile: Performance > 80, Accessibility ≥ 95, PWA installable
 - PR from `dev` to `main` with summary, linked issues and the tested Vercel preview link

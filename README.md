@@ -1,73 +1,79 @@
-# React + TypeScript + Vite
+# Homekeep
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A calm, mobile-first web app for keeping on top of recurring home tasks: what is due today, room by room,
+with gentle streaks and XP instead of guilt. Designed for a 375px phone first and installable as a PWA
+(ST-027). In MVP1 all data stays in your browser (localStorage); nothing is sent to a server.
 
-Currently, two official plugins are available:
+See [`docs/PRD.md`](docs/PRD.md) for the product requirements and [`docs/backlog/`](docs/backlog/README.md)
+for the MVP1 stories.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Stack
 
-## React Compiler
+| Layer      | Choice                                                 |
+| ---------- | ------------------------------------------------------ |
+| Framework  | React 19 + TypeScript, built with Vite                 |
+| Styling    | CSS Modules + CSS custom properties (no CSS framework) |
+| State      | React state + localStorage                             |
+| Unit tests | Vitest + Testing Library (jsdom)                       |
+| Quality    | ESLint, Prettier, `tsc` type check                     |
+| Hosting    | Vercel (ST-008)                                        |
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Local setup
 
-## Expanding the ESLint configuration
+Requires Node 24 (see [`.nvmrc`](.nvmrc); `nvm use` picks it up).
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Then open the URL Vite prints (usually http://localhost:5173).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Scripts
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+| Script                 | What it does                                   |
+| ---------------------- | ---------------------------------------------- |
+| `npm run dev`          | Start the dev server with hot reload           |
+| `npm run build`        | Type check and build for production to `dist/` |
+| `npm run preview`      | Serve the production build locally             |
+| `npm test`             | Run the unit tests once (`vitest run`)         |
+| `npm run test:watch`   | Run the unit tests in watch mode               |
+| `npm run lint`         | ESLint                                         |
+| `npm run typecheck`    | TypeScript type check, no output files         |
+| `npm run format`       | Format everything with Prettier                |
+| `npm run format:check` | Check formatting without changing files        |
+
+CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs formatting, lint, the raw-colour check, type
+check, unit tests, build, `npm audit` and a secret scan on every pull request. All must pass before merge.
+
+## Project layout
+
 ```
+src/
+  components/  shared UI components
+  pages/       one folder or file per screen
+  hooks/       React hooks (including the storage hook, ST-004)
+  styles/      global CSS and design tokens (ST-002)
+  types/       TypeScript interfaces for the data model
+  utils/       pure helpers (dates, scheduling, XP)
+docs/          PRD, design language and backlog
+tools/ci/      scripts CI runs, with their own tests
+```
+
+## Branches and commits
+
+- `main` is production. It is protected: no direct pushes, a pull request is required and CI must pass.
+- `dev` is the integration branch. Only `dev` merges into `main`.
+- Work happens on `feat/<name>` or `fix/<name>` branches cut from `dev`, one story per pull request into
+  `dev`, using [the PR template](.github/pull_request_template.md) with `Closes #<issue>`.
+- Commits follow [Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `docs:`,
+  `chore:`, `ci:`, `test:`, `refactor:`.
+
+The protection for `main` is kept in [`.github/rulesets/protect-main.json`](.github/rulesets/protect-main.json).
+To apply it: repository **Settings → Rules → Rulesets → New ruleset → Import a ruleset**, and choose that
+file.
+
+## Environment
+
+No environment variables are needed for MVP1. [`.env.example`](.env.example) is the template; `.env` files
+are git-ignored and secrets never go in the repo.

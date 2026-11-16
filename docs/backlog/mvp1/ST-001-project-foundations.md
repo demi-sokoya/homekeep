@@ -10,12 +10,12 @@ A Vite + React + TypeScript project on a `dev` branch, with the agreed folder st
 ### Business rules
 - Scaffold from `dev`, not `main`: `npm create vite@latest . -- --template react-ts`
 - Folders: `src/components/`, `src/pages/`, `src/hooks/`, `src/styles/`, `src/types/`, `src/utils/`, `docs/`
-- Branches: `main` (production, PR only), `dev` (integration), `feature/[name]`, `fix/[name]`
+- Branches: `main` (production, PR only), `dev` (integration), `feat/[name]`, `fix/[name]`
 - Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`)
 - CSS Modules + CSS custom properties; no CSS framework
 - Vitest set up for unit tests
 - `main` protected: no direct pushes, PR required, CI must pass
-- `package.json` scripts the CI workflow (`.github/workflows/ci.yml`) already calls: `format:check` (Prettier), `lint` (ESLint), `typecheck` (`tsc --noEmit`), `test` (`vitest run`), `build`; `test:e2e` arrives with ST-029
+- `package.json` scripts the CI workflow (`.github/workflows/ci.yml`) already calls: `format:check` (Prettier), `lint` (ESLint), `typecheck` (`tsc -b`; the root tsconfig only holds project references, each with `noEmit`), `test` (`vitest run`), `build`; `test:e2e` arrives with ST-029
 - In the same pull request: remove the "App scaffold present (until ST-001)" steps and their `if:` lines from `ci.yml`, and add an npm entry to `.github/dependabot.yml`
 - `.github/pull_request_template.md` is used for every story PR (one story per PR, `Closes #n`)
 - Repo root has `README.md` (overview, stack, local setup), `CHANGELOG.md` (Keep a Changelog), `.env.example` (empty template is fine)
@@ -41,7 +41,7 @@ Feature: Project foundations
 
   Scenario: Type errors fail the build
     Given a pull request that introduces a TypeScript error
-    When continuous integration runs npx tsc --noEmit
+    When continuous integration runs npm run typecheck (tsc -b)
     Then the check fails and names the file
 
   Scenario: Checks run on every pull request
