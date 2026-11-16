@@ -2,7 +2,7 @@
 
 30 issues in the Mediccord story format (user story or technical enabler, Gherkin acceptance criteria). Source: `docs/PRD.md`, design.md, Design_spec.md, the Stitch prompt and the Web App Development SOP.
 
-File them all with `./docs/backlog/create-issues.sh` (GitHub CLI, logged in). Run it on a repo with no issues or PRs yet and ST-00N becomes issue #N.
+All 30 are filed as issues #1–#30. `./docs/backlog/create-issues.sh` (GitHub CLI, logged in) files any item whose title is not already an issue, so it is safe to re-run after adding new backlog files.
 
 | ID | Type | Epic | Pts | Sprint | Priority | Design missing |
 |---|---|---|---|---|---|---|
